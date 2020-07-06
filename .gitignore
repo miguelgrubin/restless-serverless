@@ -1,0 +1,15 @@
+# package directories
+node_modules
+jspm_packages
+
+# testing
+.nyc_output
+coverage
+
+# dotenv
+.env
+.env.dev
+.env.pro
+
+# Serverless directories
+.serverless

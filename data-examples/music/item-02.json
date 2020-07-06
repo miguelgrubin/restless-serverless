@@ -1,0 +1,9 @@
+{
+  "TableName": "Music",
+  "Item": {
+    "artist": "The Cure",
+    "title": "A Forest",
+    "year": 1980,
+    "country": "UK"
+  }
+}

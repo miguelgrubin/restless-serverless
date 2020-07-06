@@ -1,0 +1,14 @@
+{
+  "TableName": "Music",
+  "Item": {
+    "artist": "Iseo & Dodosound",
+    "title": "Chan Chan",
+    "year": 2019,
+    "country": "ES",
+    "platforms": [
+      {"name": "Youtube", "url": "https://www.youtube.com/watch?v=LWc8_ZUJTWQ"},
+      {"name": "Spotify", "url": "https://open.spotify.com/album/2xTfz7inT32TuN0DWM09IA"},
+      {"name": "deezer", "url": "https://www.deezer.com/es/album/100213042"}
+    ]
+  }
+}

@@ -1,0 +1,130 @@
+service: restless
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-1
+  environment:
+    DYNAMODB_BOOKS_TABLE: ${self:service}-books-${opt:stage, self:provider.stage}
+    # DYNAMODB_MUSIC_TABLE: ${self:service}-music-${opt:stage, self:provider.stage}
+    # DYNAMODB_MOVIES_TABLE: ${self:service}-movies-${opt:stage, self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_BOOKS_TABLE}"
+    # - Effect: Allow
+    #   Action:
+    #     - dynamodb:Query
+    #     - dynamodb:Scan
+    #     - dynamodb:GetItem
+    #     - dynamodb:PutItem
+    #     - dynamodb:UpdateItem
+    #     - dynamodb:DeleteItem
+    #     Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_MUSIC_TABLE}"
+    # - Effect: Allow
+    #   Action:
+    #     - dynamodb:Query
+    #     - dynamodb:Scan
+    #     - dynamodb:GetItem
+    #     - dynamodb:PutItem
+    #     - dynamodb:UpdateItem
+    #     - dynamodb:DeleteItem
+    #   Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_MOVIES_TABLE}"
+
+package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+  exclude:
+    - data-examples/**
+
+functions:
+  books-create:
+    handler: src/handlers/books.createBook
+    events:
+      - http:
+          path: books
+          method: post
+  books-update:
+    handler: src/handlers/books.updateBook
+    events:
+      - http:
+          path: books/{id}
+          method: put
+  books-search:
+    handler: src/handlers/books.searchBook
+    events:
+      - http:
+          path: books
+          method: get
+  books-show:
+    handler: src/handlers/books.showBook
+    events:
+      - http:
+          path: books/{id}
+          method: get
+
+  books-delete:
+    handler: src/handlers/books.deleteBook
+    events:
+      - http:
+          path: books/{id}
+          method: delete
+
+resources:
+  BooksDynamoDbTable:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Retain
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TableName: ${self:provider.environment.DYNAMODB_BOOKS_TABLE}
+  # MusicDynamoDbTable:
+  #   Type: 'AWS::DynamoDB::Table'
+  #   DeletionPolicy: Retain
+  #   Properties:
+  #     AttributeDefinitions:
+  #       -
+  #         AttributeName: id
+  #         AttributeType: S
+  #     KeySchema:
+  #       -
+  #         AttributeName: id
+  #         KeyType: HASH
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: 1
+  #       WriteCapacityUnits: 1
+  #     TableName: ${self:provider.environment.DYNAMODB_MUSIC_TABLE}
+  # MoviesDynamoDbTable:
+  #   Type: 'AWS::DynamoDB::Table'
+  #   DeletionPolicy: Retain
+  #   Properties:
+  #     AttributeDefinitions:
+  #       -
+  #         AttributeName: id
+  #         AttributeType: S
+  #     KeySchema:
+  #       -
+  #         AttributeName: id
+  #         KeyType: HASH
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: 1
+  #       WriteCapacityUnits: 1
+  #     TableName: ${self:provider.environment.DYNAMODB_MOVIES_TABLE}

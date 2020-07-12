@@ -1,5 +1,4 @@
-import { Book } from '../entities/book'
-import { BookService } from '../service/book'
+import { BookService } from '../services/book'
 import { BookDynamoDB } from '../repositories/bookDynamoDB'
 import { Handler, APIGatewayEvent } from 'aws-lambda'
 
@@ -7,14 +6,14 @@ const bookSrv = new BookService(new BookDynamoDB())
 
 export const createBook : Handler = async (event: APIGatewayEvent) => {
   return await bookSrv.create(
-    new Book().fromJSON(event.body)
+    JSON.parse(event.body)
   )
 }
 
 export const updateBook : Handler = async (event: APIGatewayEvent) => {
   return await bookSrv.update(
     event.queryStringParameters.id,
-    new Book().fromJSON(event.body)
+    JSON.parse(event.body)
   )
 }
 
@@ -23,9 +22,11 @@ export const searchBook : Handler = async (event: APIGatewayEvent) => {
 }
 
 export const showBook : Handler = async (event: APIGatewayEvent) => {
-  return await bookSrv.show(event.queryStringParameters.id)
+  console.log(`Show book: ${event.pathParameters.id}`)
+  return await bookSrv.show(event.pathParameters.id)
 }
 
 export const deleteBook : Handler = async (event: APIGatewayEvent) => {
-  return await bookSrv.delete(event.queryStringParameters.id)
+  console.log(`Delete book: ${event.pathParameters.id}`)
+  return await bookSrv.delete(event.pathParameters.id)
 }

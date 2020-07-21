@@ -1,3 +1,5 @@
+import { HTTP_STATUS } from '../constants'
+
 type HeadersMap = Record<string, string>
 const baseHeaders = {
   'Content-Type': 'application/json'
@@ -15,32 +17,21 @@ export interface Response {
 
 class BaseResponse implements Response {
   statusCode: string
-  body: unknown
+  body: string
   headers: HeadersMap
 
-  constructor (body: unknown, statusCode?: string, headers?: HeadersMap) {
-    this.body = body
-    if (headers) {
-      this.headers = headers
-    }
-    if (statusCode) {
-      this.statusCode = statusCode
-    }
+  constructor (body: unknown, statusCode: string, headers?: HeadersMap) {
+    this.body = JSON.stringify(body)
+    this.statusCode = statusCode
+    this.headers = headers || baseHeaders
   }
 }
 
 export class ErrorResponse extends BaseResponse {
-  statusCode = '500'
-  headers : HeadersMap = baseHeaders
-
-  body = {
-    error: 'Bad Request'
+  static badRequest (body: unknown) : BaseResponse {
+    return new BaseResponse(body, HTTP_STATUS.badRequest)
   }
 }
 
 export class SuccessResponse extends BaseResponse {
-  statusCode = '200'
-  headers : HeadersMap = baseHeaders
-
-  body = {}
 }

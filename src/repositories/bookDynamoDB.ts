@@ -1,6 +1,5 @@
 import { BookRepository, BookList } from './book'
 import { Book } from '../entities/book'
-import AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -9,10 +8,11 @@ const TABLE_NAME = process.env.DYNAMODB_BOOKS_TABLE
 export class BookDynamoDB implements BookRepository {
   dynamo : DocumentClient
   constructor () {
-    this.dynamo = new AWS.DynamoDB.DocumentClient()
+    this.dynamo = new DocumentClient()
   }
 
-  search (filters: any): Promise<BookList> {
+  search (filters: unknown): Promise<BookList> {
+    console.log(filters)
     throw new Error('Method not implemented.')
   }
 
@@ -23,7 +23,8 @@ export class BookDynamoDB implements BookRepository {
         id: id
       }
     }).promise().then((data) => {
-      return new Book(data)
+      console.log('Book fetched: ', JSON.stringify(data))
+      return new Book(data.Item)
     }).catch((err) => {
       console.error(err)
       return null
@@ -32,43 +33,57 @@ export class BookDynamoDB implements BookRepository {
 
   async create (book: Book): Promise<Book> {
     book.id = uuidv4()
-    const createdBook = await this.dynamo.put({
+    await this.dynamo.put({
       TableName: TABLE_NAME,
       Item: book
-    }).promise().then((data) => {
-      return new Book(data)
-    }).catch((err) => {
+    }).promise().catch((err) => {
       console.error(err)
-      return null
     })
-    return createdBook
+    return book
   }
 
   async update (id : string, book: Book): Promise<Book> {
-    const data = await this.dynamo.update({
+    await this.dynamo.update(
+      this.updateQuery(id, book)
+    ).promise().catch((err) => {
+      console.error(err)
+    })
+    return await this.fetch(id)
+  }
+
+  private updateQuery (id: string, book: Book) {
+    const query = {
       TableName: TABLE_NAME,
       Key: {
         id: id
       },
-      UpdateExpression: 'set author = :a, title = :t, year = :y, isbn = :i',
-      ExpressionAttributeValues: {
-        ':a': book.author,
-        ':t': book.title,
-        ':y': book.year,
-        ':i': book.isbn
+      UpdateExpression: '',
+      ExpressionAttributeValues: {}
+    }
+    const fields = []
+    for (const field in book) {
+      if (book[field]) {
+        query.ExpressionAttributeValues[':' + field] = book[field]
+        fields.push(field)
       }
-    }).promise()
-    return new Book(data)
+    }
+    query.UpdateExpression = 'set ' + fields.map((field) => {
+      return `${field} = :${field}`
+    }).join(', ')
+    return query
   }
 
   async delete (id: string): Promise<boolean> {
-    let response = false
-    await this.dynamo.delete({
+    return await this.dynamo.delete({
       TableName: TABLE_NAME,
       Key: {
         id: id
       }
-    }).promise().then(() => { response = true })
-    return response
+    }).promise().then(() => {
+      return true
+    }).catch((err) => {
+      console.error(err)
+      return false
+    })
   }
 }
